@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Project UI</title>
+    <!-- Import Tailwind CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <!-- Import Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <!-- Import Font Awesome -->
+    <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+    <!-- Import Vue.js -->
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.6.14/dist/vue.min.js"></script>
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: rgba(0, 0, 0, 0); /* Transparent background */
+        }
+        .progress-bar-container {
+            height: 30px;
+            background-color: rgba(0, 0, 0, 0.719); /* Transparent background */
+            border: 2px solid black;
+            border-radius: 5px;
+            overflow: hidden;
+            position: relative;
+            animation: glow 1.5s infinite alternate;
+        }
+        .progress-fill {
+            height: 100%;
+            transition: width 0.3s ease-in-out;
+        }
+        @keyframes glow {
+            from {
+                box-shadow: 0 0 5px var(--glow-color);
+            }
+            to {
+                box-shadow: 0 0 20px var(--glow-color);
+            }
+        }
+        .progress-text {
+            position: absolute;
+            width: 100%;
+            text-align: center;
+            color: white;
+            font-weight: bold;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+        .icon {
+            font-size: 2rem;
+        }
+    </style>
+</head>
+<body>
+    <div id="app" class="fixed bottom-24 left-1/2 transform -translate-x-1/2 p-4 w-1/6" v-if="progressBars.length > 0">
+        <progress-bar
+            v-for="bar in progressBars"
+            :key="bar.id"
+            :label="bar.label"
+            :value="bar.value"
+            :color="bar.color"
+        ></progress-bar>
+    </div>
+
+    <script>
+        Vue.component('progress-bar', {
+            props: ['label', 'value', 'color'],
+            template: `
+                <div class="mb-2 relative">
+                    <div class="progress-bar-container" :style="{ '--glow-color': color }">
+                        <div class="progress-fill" :style="{ width: value + '%', backgroundColor: color }"></div>
+                        <div class="progress-text">{{ label }}</div>
+                    </div>
+                </div>
+            `,
+        });
+
+        new Vue({
+            el: '#app',
+            data: {
+                progressBars: []
+            },
+            methods: {
+                addProgressBar(label, value, color) {
+                    const id = this.progressBars.length + 1;
+                    this.progressBars.push({ id, label, value, color });
+                },
+                updateProgressBar(value) {
+                    const lastBar = this.progressBars[this.progressBars.length - 1];
+                    if (lastBar) {
+                        lastBar.value = value;
+                    }
+                },
+                removeProgressBar() {
+                    this.progressBars.pop();
+                }
+            },
+            mounted() {
+                window.addEventListener('message', event => {
+                    if (event.data.type === 'show') {
+                        this.addProgressBar(event.data.label, event.data.value, event.data.color);
+                    } else if (event.data.type === 'update') {
+                        this.updateProgressBar(event.data.value);
+                    } else if (event.data.type === 'remove') {
+                        this.removeProgressBar();
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html>
